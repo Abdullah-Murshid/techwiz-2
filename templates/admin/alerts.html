@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block page_title %}System Anomaly Alerts{% endblock %}
+
+{% block content %}
+<!-- Alert Count Header Stat -->
+<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px;">
+    <div class="kpi-card kpi-invalid">
+        <div class="kpi-label">Active Alerts</div>
+        <div class="kpi-value">{{ anomaly_alerts | length }}</div>
+        <div class="kpi-sub">Requiring attention</div>
+    </div>
+    <div class="kpi-card kpi-neutral">
+        <div class="kpi-label">Critical / High</div>
+        <div class="kpi-value">{{ anomaly_alerts | selectattr('severity', 'in', ['CRITICAL','HIGH']) | list | length }}</div>
+        <div class="kpi-sub">Highest priority</div>
+    </div>
+    <div class="kpi-card kpi-review">
+        <div class="kpi-label">Medium / Low</div>
+        <div class="kpi-value">{{ anomaly_alerts | selectattr('severity', 'in', ['MEDIUM','LOW']) | list | length }}</div>
+        <div class="kpi-sub">Lower priority</div>
+    </div>
+</div>
+
+<!-- Full Alerts Table -->
+<div class="panel">
+    <div class="panel-header">
+        <div>
+            <h2 class="panel-title">🚨 System Anomaly Alerts</h2>
+            <p style="font-size: 12px; color: var(--text-muted); margin: 0;">
+                All anomaly events detected by the monitoring engine, sorted by severity and detection time.
+            </p>
+        </div>
+        {% if anomaly_alerts %}
+        <span class="severity-badge severity-high"><span class="status-dot"></span> {{ anomaly_alerts | length }} Active Alerts</span>
+        {% else %}
+        <span class="status-badge status-valid"><span class="status-dot"></span> All systems nominal</span>
+        {% endif %}
+    </div>
+
+    {% if anomaly_alerts %}
+    <div style="margin-bottom: 12px;">
+        <input type="text" class="form-input" placeholder="Filter by alert type, severity, or details..." data-table-search="alerts-table">
+    </div>
+    <div class="table-container">
+        <table class="table" id="alerts-table">
+            <thead>
+                <tr>
+                    <th>Alert Type</th>
+                    <th>Severity</th>
+                    <th>Details</th>
+                    <th>Detected At</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in anomaly_alerts %}
+                <tr class="row-severity-{{ a.severity | lower }}">
+                    <td><code>{{ a.alert_type }}</code></td>
+                    <td>
+                        <span class="severity-badge severity-{{ a.severity | lower }}">
+                            <span class="status-dot"></span> {{ a.severity }}
+                        </span>
+                    </td>
+                    <td style="font-size: 12px; color: var(--text-secondary);">{{ a.details }}</td>
+                    <td style="white-space: nowrap;">{{ a.created_at }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-success" style="margin: 0;">
+        🎉 No anomaly alerts detected. All monitored metrics are within normal ranges.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

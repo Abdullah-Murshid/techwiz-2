@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block page_title %}Registered Products & Active Warranties{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <h1 style="font-size: 18px;">Registered Products & Active Warranties</h1>
+        <p style="font-size: 13px; color: var(--text-muted); margin: 0;">Full inventory of registered devices and warranty coverage status.</p>
+    </div>
+    <a href="{{ url_for('customer_wizard') }}" class="btn btn-primary">
+        <svg class="nav-icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Register New Product
+    </a>
+</div>
+
+<!-- Products Header Stat Panel -->
+<div class="panel">
+    <div class="panel-header">
+        <h2 class="panel-title">📦 Registered Products</h2>
+        <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">{{ products | length }} Products Registered</span>
+    </div>
+
+    {% if products %}
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Product / Brand</th>
+                    <th>Category</th>
+                    <th>Serial Number</th>
+                    <th>Purchase Date</th>
+                    <th>Warranty Provider</th>
+                    <th>Status</th>
+                    <th>Days Remaining</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in products %}
+                <tr>
+                    <td style="font-weight: 500; color: var(--text-primary);">
+                        {{ p.product_name }}
+                        {% if p.model_number and p.model_number != 'N/A' %}
+                        <div style="font-size: 11px; color: var(--text-muted);">Model: {{ p.model_number }}</div>
+                        {% endif %}
+                    </td>
+                    <td>{{ p.category }}</td>
+                    <td><code>{{ p.serial_number }}</code></td>
+                    <td>{{ p.purchase_date }}</td>
+                    <td>{{ p.provider or 'Manufacturer' }}</td>
+                    <td>
+                        {% if p.warranty_status == 'Active' %}
+                            <span class="status-badge status-valid"><span class="status-dot"></span> Active</span>
+                        {% elif p.warranty_status == 'Nearing Expiry' %}
+                            <span class="status-badge status-review"><span class="status-dot"></span> Nearing Expiry</span>
+                        {% elif p.warranty_status == 'Extended' %}
+                            <span class="status-badge status-info"><span class="status-dot"></span> Extended</span>
+                        {% else %}
+                            <span class="status-badge status-invalid"><span class="status-dot"></span> Expired</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if p.remaining_days > 0 %}
+                            {{ p.remaining_days }} Days
+                        {% else %}
+                            <span style="color: var(--status-invalid-text);">Expired</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info" style="margin: 0;">
+        No registered products found. Submit a claim to register your device automatically.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

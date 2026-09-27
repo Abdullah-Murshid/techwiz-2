@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block page_title %}System Audit Trail Logs{% endblock %}
+
+{% block content %}
+<!-- Audit Log Stats -->
+<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px;">
+    <div class="kpi-card kpi-neutral">
+        <div class="kpi-label">Total Log Entries</div>
+        <div class="kpi-value">{{ audit_logs | length }}</div>
+        <div class="kpi-sub">All time</div>
+    </div>
+    <div class="kpi-card kpi-neutral">
+        <div class="kpi-label">Verdict Overrides</div>
+        <div class="kpi-value">{{ audit_logs | selectattr('action', 'equalto', 'CLAIM_VERDICT_OVERRIDE_APPROVED') | list | length }}</div>
+        <div class="kpi-sub">Approved overrides</div>
+    </div>
+    <div class="kpi-card kpi-neutral">
+        <div class="kpi-label">Unique Actors</div>
+        <div class="kpi-value">{{ audit_logs | map(attribute='user_id') | list | unique | list | length }}</div>
+        <div class="kpi-sub">Users in log</div>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-header">
+        <div>
+            <h2 class="panel-title">📜 System Audit Trail Logs</h2>
+            <p style="font-size: 12px; color: var(--text-muted); margin: 0;">
+                Chronological record of all system actions — verdicts, logins, retraining, and threshold changes.
+                Showing all {{ audit_logs | length }} entries.
+            </p>
+        </div>
+    </div>
+
+    <!-- Live Filter -->
+    <div style="margin-bottom: 12px;">
+        <input type="text" class="form-input" placeholder="Filter by action, user ID, or details..." data-table-search="audit-log-table">
+    </div>
+
+    {% if audit_logs %}
+    <div class="table-container">
+        <table class="table" id="audit-log-table">
+            <thead>
+                <tr>
+                    <th>Log ID</th>
+                    <th>User ID</th>
+                    <th>Action</th>
+                    <th>Audit Details</th>
+                    <th>Timestamp</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in audit_logs %}
+                <tr>
+                    <td><code>#{{ log.log_id }}</code></td>
+                    <td>{{ log.user_id or 'System' }}</td>
+                    <td><code>{{ log.action }}</code></td>
+                    <td style="font-size: 12px; color: var(--text-secondary);">{{ log.details }}</td>
+                    <td style="white-space: nowrap;">{{ log.timestamp }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info" style="margin: 0;">No audit trail logs recorded yet.</div>
+    {% endif %}
+</div>
+{% endblock %}

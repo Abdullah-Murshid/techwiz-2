@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block page_title %}Claims & Data Export{% endblock %}
+
+{% block content %}
+<div class="panel">
+    <div class="panel-header">
+        <div>
+            <h2 class="panel-title">📄 Claim Records & Data Export Tools</h2>
+            <p style="font-size: 12px; color: var(--text-muted); margin: 0;">
+                Multi-criterion search, filterable dataset, and downloadable claim evaluation reports.
+            </p>
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <a href="{{ url_for('admin_export', format='csv') }}" class="btn btn-secondary btn-sm">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Export CSV
+            </a>
+            <a href="{{ url_for('admin_export', format='excel') }}" class="btn btn-secondary btn-sm">
+                <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Export Excel (.xlsx)
+            </a>
+        </div>
+    </div>
+
+    <!-- Download Individual Claim Markdown Report -->
+    <div style="margin-bottom: 16px; padding: 12px; background-color: var(--bg-surface-subtle); border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+        <form action="{{ url_for('admin_download_report') }}" method="GET" style="display: flex; gap: 12px; align-items: flex-end;">
+            <div style="flex: 1;">
+                <label class="form-label">Select Claim to Download Individual Report (.md)</label>
+                <select name="claim_id" class="form-select">
+                    {% for c in claims %}
+                    <option value="{{ c.claim_id }}">{{ c.claim_id }} - {{ c.customer_name or 'Customer' }} ({{ c.product_name or 'Product' }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-secondary btn-sm">📥 Download Claim Report (.md)</button>
+        </form>
+    </div>
+
+    <!-- Live Search -->
+    <div style="margin-bottom: 12px;">
+        <input type="text" class="form-input" placeholder="Live search by Claim ID, customer name, serial number, fault type..." data-table-search="admin-claims-table">
+    </div>
+
+    <div class="table-container">
+        <table class="table" id="admin-claims-table">
+            <thead>
+                <tr>
+                    <th>Claim ID</th>
+                    <th>Customer Name</th>
+                    <th>Category</th>
+                    <th>Serial Number</th>
+                    <th>Fault Type</th>
+                    <th>Python ML</th>
+                    <th>Teachable Machine</th>
+                    <th>Final Verdict</th>
+                    <th>Status</th>
+                    <th>Created At</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in claims %}
+                <tr>
+                    <td><code>{{ c.claim_id }}</code></td>
+                    <td>{{ c.customer_name or 'N/A' }}</td>
+                    <td>{{ c.category or 'N/A' }}</td>
+                    <td><code>{{ c.serial_number or 'N/A' }}</code></td>
+                    <td>{{ c.fault_type }}</td>
+                    <td>{{ c.ml_prediction or 'N/A' }}</td>
+                    <td>{{ c.teachable_prediction or 'N/A' }}</td>
+                    <td>
+                        {% if c.final_verdict in ['Likely Valid', 'Approved'] %}
+                            <span class="status-badge status-valid"><span class="status-dot"></span> {{ c.final_verdict }}</span>
+                        {% elif c.final_verdict in ['Likely Invalid', 'Rejected'] %}
+                            <span class="status-badge status-invalid"><span class="status-dot"></span> {{ c.final_verdict }}</span>
+                        {% else %}
+                            <span class="status-badge status-review"><span class="status-dot"></span> {{ c.final_verdict }}</span>
+                        {% endif %}
+                    </td>
+                    <td><span class="status-badge status-info"><span class="status-dot"></span> {{ c.claim_status }}</span></td>
+                    <td>{{ c.created_at }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

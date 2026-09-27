@@ -1,0 +1,398 @@
+{% extends "base.html" %}
+
+{% block page_title %}Submit & Track Warranty Claim{% endblock %}
+
+{% block content %}
+<div class="stepper">
+    <div class="step-item {% if step == 1 %}active{% elif step > 1 %}completed{% endif %}">
+        <span class="step-number">1</span> 1. Product Details
+    </div>
+    <div class="step-item {% if step == 2 %}active{% elif step > 2 %}completed{% endif %}">
+        <span class="step-number">2</span> 2. Fault & Damage
+    </div>
+    <div class="step-item {% if step == 3 %}active{% elif step > 3 %}completed{% endif %}">
+        <span class="step-number">3</span> 3. Documents & OCR
+    </div>
+    <div class="step-item {% if step == 4 %}active{% endif %}">
+        <span class="step-number">4</span> 4. OCR Verification & Consensus
+    </div>
+</div>
+
+<div class="panel">
+    <!-- STEP 1: PRODUCT DETAILS -->
+    {% if step == 1 %}
+    <div class="panel-header">
+        <h2 class="panel-title">📦 Step 1: Product Information</h2>
+        <span style="font-size: 12px; color: var(--text-muted);">Claim ID: <code>{{ draft.claim_id }}</code></span>
+    </div>
+
+    <form action="{{ url_for('customer_wizard') }}" method="POST">
+        <input type="hidden" name="step" value="1">
+        <div class="grid-2">
+            <div>
+                <div class="form-group">
+                    <label class="form-label" for="category">Product Category</label>
+                    <select id="category" name="category" class="form-select">
+                        <option value="Washing Machine" {% if draft.get('category') == 'Washing Machine' %}selected{% endif %}>Washing Machine</option>
+                        <option value="Laptop" {% if draft.get('category') == 'Laptop' %}selected{% endif %}>Laptop</option>
+                        <option value="Refrigerator" {% if draft.get('category') == 'Refrigerator' %}selected{% endif %}>Refrigerator</option>
+                        <option value="Smartphone" {% if draft.get('category') == 'Smartphone' %}selected{% endif %}>Smartphone</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="brand">Brand / Manufacturer</label>
+                    <input type="text" id="brand" name="brand" class="form-input" value="{{ draft.get('brand', 'Samsung') }}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="model_number">Model Number</label>
+                    <input type="text" id="model_number" name="model_number" class="form-input" value="{{ draft.get('model_number', 'SAM-801') }}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="retailer">Retailer / Store Name</label>
+                    <input type="text" id="retailer" name="retailer" class="form-input" value="{{ draft.get('retailer', 'Official Store') }}" required>
+                </div>
+            </div>
+
+            <div>
+                <div class="form-group">
+                    <label class="form-label" for="serial_number">Serial Number</label>
+                    <input type="text" id="serial_number" name="serial_number" class="form-input" value="{{ draft.get('serial_number', 'SA-991823') }}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="purchase_price">Purchase Price ($)</label>
+                    <input type="number" id="purchase_price" name="purchase_price" class="form-input" step="0.01" min="10" max="10000" value="{{ draft.get('purchase_price', 850) }}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="purchase_date">Purchase Date</label>
+                    <input type="date" id="purchase_date" name="purchase_date" class="form-input" value="{{ draft.get('purchase_date', default_purchase_date) }}" required>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; margin-top: 16px; border-top: 1px solid var(--border-color); padding-top: 16px;">
+            <button type="submit" class="btn btn-primary">Next: Fault Information →</button>
+        </div>
+    </form>
+
+    <!-- STEP 2: FAULT DETAILS -->
+    {% elif step == 2 %}
+    <div class="panel-header">
+        <h2 class="panel-title">🛠️ Step 2: Fault & Damage Details</h2>
+        <span style="font-size: 12px; color: var(--text-muted);">Claim ID: <code>{{ draft.claim_id }}</code></span>
+    </div>
+
+    <form action="{{ url_for('customer_wizard') }}" method="POST">
+        <input type="hidden" name="step" value="2">
+        <div class="grid-2">
+            <div>
+                <div class="form-group">
+                    <label class="form-label" for="fault_type">Primary Issue Category</label>
+                    <select id="fault_type" name="fault_type" class="form-select">
+                        {% for f in ['Motor Failure', 'Screen Damage', 'Power Failure', 'Water Leakage', 'Overheating', 'Board Defect'] %}
+                        <option value="{{ f }}" {% if draft.get('fault_type') == f %}selected{% endif %}>{{ f }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="product_age">Product Age (Months)</label>
+                    <input type="number" id="product_age" name="product_age" class="form-input" min="0" max="120" value="{{ draft.get('product_age', 10) }}" required>
+                </div>
+            </div>
+
+            <div>
+                <div class="form-group">
+                    <label class="form-label" for="warranty_duration">Standard Warranty Duration (Months)</label>
+                    <input type="number" id="warranty_duration" name="warranty_duration" class="form-input" min="1" max="60" value="{{ draft.get('warranty_duration', 24) }}" required>
+                </div>
+                <div style="background-color: var(--bg-surface-subtle); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px; margin-top: 24px;">
+                    <div style="font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Estimated Remaining Warranty</div>
+                    <div style="font-size: 18px; font-weight: 600; color: var(--text-primary); margin-top: 4px;">
+                        {{ draft.get('warranty_duration', 24) - draft.get('product_age', 10) }} Months
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 16px;">
+            <label class="form-label" for="fault_description">Detailed Problem Description</label>
+            <textarea id="fault_description" name="fault_description" class="form-textarea" required>{{ draft.get('fault_description', 'Device stopped operating during regular use.') }}</textarea>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; margin-top: 16px; border-top: 1px solid var(--border-color); padding-top: 16px;">
+            <a href="{{ url_for('customer_wizard', set_step=1) }}" class="btn btn-secondary">← Back</a>
+            <button type="submit" class="btn btn-primary">Next: Document Uploads & OCR →</button>
+        </div>
+    </form>
+
+    <!-- STEP 3: DOCUMENT UPLOADS & OCR -->
+    {% elif step == 3 %}
+    <div class="panel-header">
+        <h2 class="panel-title">📎 Step 3: Supporting Document Uploads & OCR Extraction</h2>
+        <span style="font-size: 12px; color: var(--text-muted);">Claim ID: <code>{{ draft.claim_id }}</code></span>
+    </div>
+
+    <div class="alert alert-info">
+        Upload receipt image for automatic OCR text & serial extraction.
+    </div>
+
+    <div class="grid-3">
+        <!-- Receipt Upload Form -->
+        <div style="border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 16px; background-color: var(--bg-surface);">
+            <h3 style="font-size: 13px; font-weight: 600; margin-bottom: 8px;">🧾 Purchase Receipt</h3>
+            <form action="{{ url_for('customer_wizard') }}" method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="step" value="3">
+                <input type="hidden" name="upload_type" value="receipt">
+                <div class="form-group">
+                    <input type="file" name="receipt_file" class="form-input" accept=".png,.jpg,.jpeg,.pdf" required>
+                </div>
+                <button type="submit" class="btn btn-secondary btn-sm" style="width: 100%;">Upload & Extract OCR</button>
+            </form>
+            {% if draft.get('receipt_uploaded') %}
+            <div style="margin-top: 8px;" class="status-badge status-valid"><span class="status-dot"></span> Receipt Attached</div>
+            {% endif %}
+        </div>
+
+        <!-- Warranty Card Upload Form -->
+        <div style="border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 16px; background-color: var(--bg-surface);">
+            <h3 style="font-size: 13px; font-weight: 600; margin-bottom: 8px;">📇 Warranty Card</h3>
+            <form action="{{ url_for('customer_wizard') }}" method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="step" value="3">
+                <input type="hidden" name="upload_type" value="warranty">
+                <div class="form-group">
+                    <input type="file" name="warranty_file" class="form-input" accept=".png,.jpg,.jpeg,.pdf" required>
+                </div>
+                <button type="submit" class="btn btn-secondary btn-sm" style="width: 100%;">Upload Warranty Card</button>
+            </form>
+            {% if draft.get('warranty_uploaded') %}
+            <div style="margin-top: 8px;" class="status-badge status-valid"><span class="status-dot"></span> Warranty Attached</div>
+            {% endif %}
+        </div>
+
+        <!-- Damage Evidence Photo Form -->
+        <div style="border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 16px; background-color: var(--bg-surface);">
+            <h3 style="font-size: 13px; font-weight: 600; margin-bottom: 8px;">📷 Damage Evidence Photo</h3>
+            <form action="{{ url_for('customer_wizard') }}" method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="step" value="3">
+                <input type="hidden" name="upload_type" value="damage">
+                <div class="form-group">
+                    <input type="file" name="photo_file" class="form-input" accept=".png,.jpg,.jpeg" required>
+                </div>
+                <button type="submit" class="btn btn-secondary btn-sm" style="width: 100%;">Upload Damage Photo</button>
+            </form>
+            {% if draft.get('photo_uploaded') %}
+            <div style="margin-top: 8px;" class="status-badge status-valid"><span class="status-dot"></span> Photo Attached</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Document Replacement Box (Req 39) -->
+    <div style="margin-top: 24px; padding: 16px; border: 1px solid var(--border-color); border-radius: var(--radius-md); background-color: var(--bg-surface-subtle);">
+        <h3 style="font-size: 13px; font-weight: 600; margin-bottom: 8px;">🔄 Document Replacement & Revision (Req 39)</h3>
+        <p style="font-size: 12px; color: var(--text-muted);">Replace an existing uploaded document with an updated version.</p>
+        <form action="{{ url_for('customer_wizard') }}" method="POST" enctype="multipart/form-data" style="display: flex; gap: 12px; align-items: flex-end;">
+            <input type="hidden" name="step" value="3">
+            <input type="hidden" name="upload_type" value="replace">
+            <div style="flex: 1;">
+                <label class="form-label">Document ID to Replace</label>
+                <input type="number" name="doc_id" class="form-input" value="1" min="1">
+            </div>
+            <div style="flex: 2;">
+                <label class="form-label">Replacement File</label>
+                <input type="file" name="replacement_file" class="form-input" required>
+            </div>
+            <button type="submit" class="btn btn-secondary btn-sm">Submit Replacement</button>
+        </form>
+    </div>
+
+    <!-- OCR Extracted Field Preview -->
+    {% if ocr_data %}
+    <div style="margin-top: 24px; padding: 16px; border: 1px solid var(--border-color); border-radius: var(--radius-md); background-color: var(--bg-surface);">
+        <h3 style="font-size: 13px; font-weight: 600; margin-bottom: 12px;">🔍 OCR Extracted Receipt Preview</h3>
+        <div class="kv-list">
+            <div class="kv-item"><span class="kv-key">OCR Serial Number</span><span class="kv-val">{{ ocr_data.get('extracted_serial') or 'Not Detected' }}</span></div>
+            <div class="kv-item"><span class="kv-key">OCR Purchase Date</span><span class="kv-val">{{ ocr_data.get('extracted_date') or 'Not Detected' }}</span></div>
+            <div class="kv-item"><span class="kv-key">OCR Total Amount</span><span class="kv-val">${{ ocr_data.get('extracted_amount') or 'Not Detected' }}</span></div>
+            <div class="kv-item"><span class="kv-key">OCR Store Retailer</span><span class="kv-val">{{ ocr_data.get('extracted_retailer') or 'Not Detected' }}</span></div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div style="display: flex; justify-content: space-between; margin-top: 24px; border-top: 1px solid var(--border-color); padding-top: 16px;">
+        <a href="{{ url_for('customer_wizard', set_step=2) }}" class="btn btn-secondary">← Back</a>
+        <a href="{{ url_for('customer_wizard', set_step=4) }}" class="btn btn-primary">Next: OCR Verification & Verdict →</a>
+    </div>
+
+    <!-- STEP 4: OCR VERIFICATION & MULTI-AI CONSENSUS -->
+    {% elif step == 4 %}
+    <div class="panel-header">
+        <h2 class="panel-title">🛠️ Step 4: OCR Field Verification & Consensus Screen</h2>
+        <span style="font-size: 12px; color: var(--text-muted);">Claim ID: <code>{{ draft.claim_id }}</code></span>
+    </div>
+
+    <!-- Verification & Correction Screen -->
+    <div style="margin-bottom: 24px;">
+        <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">
+            Compare customer input data against OCR extracted values from uploaded document artifacts. Modify inputs if necessary before finalizing.
+        </p>
+
+        <form action="{{ url_for('customer_wizard') }}" method="POST">
+            <input type="hidden" name="step" value="4">
+            <input type="hidden" name="action_type" value="verify">
+
+            <div class="grid-2">
+                <div>
+                    <h3 style="font-size: 13px; font-weight: 600; margin-bottom: 12px; padding-bottom: 4px; border-bottom: 1px solid var(--border-color);">
+                        Customer Form Inputs
+                    </h3>
+                    <div class="form-group">
+                        <label class="form-label" for="confirmed_sn">Serial Number</label>
+                        <input type="text" id="confirmed_sn" name="confirmed_sn" class="form-input" value="{{ draft.get('serial_number', 'SA-991823') }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="confirmed_price">Purchase Price ($)</label>
+                        <input type="number" id="confirmed_price" name="confirmed_price" class="form-input" step="0.01" value="{{ draft.get('purchase_price', 850) }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="confirmed_retailer">Retailer Name</label>
+                        <input type="text" id="confirmed_retailer" name="confirmed_retailer" class="form-input" value="{{ draft.get('retailer', 'Official Store') }}" required>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 style="font-size: 13px; font-weight: 600; margin-bottom: 12px; padding-bottom: 4px; border-bottom: 1px solid var(--border-color);">
+                        OCR Extracted Document Values
+                    </h3>
+                    <div class="form-group">
+                        <label class="form-label">OCR Extracted Serial</label>
+                        <input type="text" class="form-input" value="{{ ocr_data.get('extracted_serial') or 'Not Found' }}" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">OCR Extracted Amount</label>
+                        <input type="text" class="form-input" value="{{ ocr_data.get('extracted_amount') or 'Not Found' }}" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">OCR Extracted Retailer</label>
+                        <input type="text" class="form-input" value="{{ ocr_data.get('extracted_retailer') or 'Not Found' }}" disabled>
+                    </div>
+                </div>
+            </div>
+
+            {% if ocr_data.get('extracted_serial') and draft.get('serial_number') != ocr_data.get('extracted_serial') %}
+            <div class="alert alert-warning">
+                ⚠️ Serial Number Mismatch Alert: Form serial number differs from OCR extracted receipt serial.
+            </div>
+            {% endif %}
+
+            <div style="margin-top: 12px;">
+                <button type="submit" class="btn btn-secondary btn-sm">Re-evaluate Pipeline with Updated Inputs</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Multi-AI Pipeline Consensus Results -->
+    {% if pipeline_res %}
+    <div style="border-top: 1px solid var(--border-color); padding-top: 24px; margin-top: 24px;">
+        <h3 style="font-size: 15px; font-weight: 600; margin-bottom: 16px;">🤖 Multi-AI & Rule Engine Consensus Evaluation</h3>
+
+        <div class="grid-3" style="margin-bottom: 24px;">
+            <div class="kpi-card">
+                <div class="kpi-label">Python ML Model Prediction</div>
+                <div class="kpi-value" style="font-size: 16px;">{{ pipeline_res.python_model.prediction }}</div>
+                <div class="kpi-sub">Confidence: {{ "%.1f"|format(pipeline_res.python_model.confidence * 100) }}%</div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-label">Teachable Machine Visual AI</div>
+                <div class="kpi-value" style="font-size: 16px;">{{ pipeline_res.teachable_machine.prediction }}</div>
+                <div class="kpi-sub">Confidence: {{ "%.1f"|format(pipeline_res.teachable_machine.confidence * 100) }}%</div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-label">Model Agreement Tier</div>
+                <div class="kpi-value" style="font-size: 16px;">{{ pipeline_res.model_comparison.comparison_status }}</div>
+                <div class="kpi-sub">Delta |Δconf|: {{ "%.1f"|format(pipeline_res.model_comparison.confidence_delta * 100) }}%</div>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 24px; padding: 16px; border: 1px solid var(--border-color); border-radius: var(--radius-md); background-color: var(--bg-surface);">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                    <span style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">System Final Verdict</span>
+                    <div style="margin-top: 4px;">
+                        {% if pipeline_res.final_verdict == 'Likely Valid' %}
+                            <span class="status-badge status-valid" style="font-size: 14px; padding: 4px 10px;"><span class="status-dot"></span> {{ pipeline_res.final_verdict }}</span>
+                        {% elif pipeline_res.final_verdict == 'Likely Invalid' %}
+                            <span class="status-badge status-invalid" style="font-size: 14px; padding: 4px 10px;"><span class="status-dot"></span> {{ pipeline_res.final_verdict }}</span>
+                        {% else %}
+                            <span class="status-badge status-review" style="font-size: 14px; padding: 4px 10px;"><span class="status-dot"></span> {{ pipeline_res.final_verdict }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div style="text-align: right;">
+                    <span style="font-size: 12px; color: var(--text-muted); font-weight: 500;">Required System Action:</span>
+                    <div style="font-size: 13px; font-weight: 600; color: var(--text-primary); margin-top: 2px;">
+                        <code>{{ pipeline_res.action_required }}</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Decision Factor Breakdown & Policy Rules -->
+        {% set exp = pipeline_res.decision_explanation %}
+        <div class="grid-2" style="margin-bottom: 24px;">
+            <div style="border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 16px; background-color: var(--bg-surface);">
+                <h4 style="margin-bottom: 8px; color: var(--status-valid-text);">✅ Supporting Factors</h4>
+                <ul style="padding-left: 18px; font-size: 13px; color: var(--text-secondary);">
+                    {% for sf in exp.supporting_factors %}
+                    <li>{{ sf }}</li>
+                    {% endfor %}
+                </ul>
+
+                <h4 style="margin-top: 16px; margin-bottom: 8px;">📜 Policy Rules Passed</h4>
+                <ul style="padding-left: 18px; font-size: 12px; color: var(--text-secondary);">
+                    {% for rp in exp.rules_passed %}
+                    <li><code>{{ rp }}</code></li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div style="border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 16px; background-color: var(--bg-surface);">
+                <h4 style="margin-bottom: 8px; color: var(--status-invalid-text);">⚠️ Opposing / Risk Factors</h4>
+                {% if exp.opposing_factors %}
+                <ul style="padding-left: 18px; font-size: 13px; color: var(--text-secondary);">
+                    {% for of in exp.opposing_factors %}
+                    <li>{{ of }}</li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p style="font-size: 13px; color: var(--text-muted);">None identified.</p>
+                {% endif %}
+
+                <h4 style="margin-top: 16px; margin-bottom: 8px;">❌ Policy Rules Failed / Flagged</h4>
+                {% if exp.rules_failed %}
+                <ul style="padding-left: 18px; font-size: 12px; color: var(--status-invalid-text);">
+                    {% for rf in exp.rules_failed %}
+                    <li><code>{{ rf }}</code></li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p style="font-size: 12px; color: var(--text-muted);">None.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <form action="{{ url_for('customer_wizard') }}" method="POST">
+            <input type="hidden" name="step" value="4">
+            <input type="hidden" name="action_type" value="finalize">
+
+            <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--border-color); padding-top: 16px;">
+                <a href="{{ url_for('customer_wizard', set_step=3) }}" class="btn btn-secondary">← Back</a>
+                <button type="submit" class="btn btn-primary">🚀 Finalize & Submit Claim Record</button>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block page_title %}System Administration & AI Controls{% endblock %}
+
+{% block content %}
+<div class="panel">
+    <div class="panel-header">
+        <div>
+            <h2 class="panel-title">⚙️ System Administration & AI Controls</h2>
+            <p style="font-size: 12px; color: var(--text-muted); margin: 0;">
+                Manage model retraining cycles and configure system alert thresholds.
+            </p>
+        </div>
+    </div>
+
+    <div class="grid-2">
+        <!-- ML Model Retraining -->
+        <div style="padding: 20px; border: 1px solid var(--border-color); border-radius: var(--radius-md); border-left: 3.5px solid var(--status-info-dot);">
+            <h3 style="font-size: 14px; font-weight: 600; margin-bottom: 6px; color: var(--text-primary);">
+                🔄 Tabular ML Model Retraining Trigger
+            </h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 6px;">Requirement 20</p>
+            <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 20px;">
+                Re-evaluates all 4 tabular algorithms (GradientBoosting, RandomForest, LogisticRegression, SVM)
+                across datasets and serializes updated model artifacts to <code>model/</code>.
+            </p>
+            <form action="{{ url_for('admin_retrain_model') }}" method="POST">
+                <button type="submit" class="btn btn-primary">Retrain Tabular ML Models</button>
+            </form>
+        </div>
+
+        <!-- Warranty Threshold Config -->
+        <div style="padding: 20px; border: 1px solid var(--border-color); border-radius: var(--radius-md); border-left: 3.5px solid var(--status-review-dot);">
+            <h3 style="font-size: 14px; font-weight: 600; margin-bottom: 6px; color: var(--text-primary);">
+                ⚠️ Warranty Expiry Alert Threshold
+            </h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 6px;">Requirement 36</p>
+            <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 20px;">
+                Configure the advance warning threshold (days) for nearing-expiry alerts.
+                Currently set to <strong>{{ curr_threshold }} days</strong>.
+            </p>
+            <form action="{{ url_for('admin_set_threshold') }}" method="POST" style="display: flex; gap: 12px; align-items: flex-end;">
+                <div style="flex: 1;">
+                    <label class="form-label">Days Before Expiry Threshold</label>
+                    <input type="number" name="expiry_threshold" class="form-input" min="1" max="180" value="{{ curr_threshold }}" required>
+                </div>
+                <button type="submit" class="btn btn-secondary">Save Threshold</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

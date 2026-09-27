@@ -1,7 +1,7 @@
 {
     "model_version": "1.0.0",
     "algorithm": "Gradient Boosting",
-    "trained_at": "2026-09-26 20:27:37",
+    "trained_at": "2026-09-26 21:46:00",
     "classes": [
         "Invalid Claim",
         "Manual Review",

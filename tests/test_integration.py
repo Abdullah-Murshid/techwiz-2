@@ -3,9 +3,7 @@ import sys
 import pandas as pd
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from database.db import init_db, get_connection
-from src.admin_analytics import fetch_claims_data, generate_claim_report_markdown
-from src.customer_wizard import record_claim_to_db
+from database.db import init_db, get_connection, fetch_claims_data, generate_claim_report_markdown, record_claim_to_db
 
 def test_module_9_integration_and_analytics():
     init_db()

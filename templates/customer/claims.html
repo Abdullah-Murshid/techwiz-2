@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block page_title %}Claim Submission History{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <h1 style="font-size: 18px;">Claim Submission History</h1>
+        <p style="font-size: 13px; color: var(--text-muted); margin: 0;">Browse and track all your submitted warranty claims.</p>
+    </div>
+    <a href="{{ url_for('customer_wizard') }}" class="btn btn-primary">
+        <svg class="nav-icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Submit New Claim
+    </a>
+</div>
+
+<!-- Claims Full Table Panel -->
+<div class="panel">
+    <div class="panel-header">
+        <h2 class="panel-title">📜 All Claims</h2>
+        <input type="text" class="form-input" placeholder="Search claims..." style="max-width: 220px;" data-table-search="claims-table">
+    </div>
+
+    {% if claims %}
+    <div class="table-container">
+        <table class="table" id="claims-table">
+            <thead>
+                <tr>
+                    <th>Claim ID</th>
+                    <th>Device / Serial</th>
+                    <th>Reported Fault</th>
+                    <th>AI Verdict</th>
+                    <th>Lifecycle Status</th>
+                    <th>Submitted At</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in claims %}
+                <tr>
+                    <td><code>{{ c.claim_id }}</code></td>
+                    <td>
+                        {{ c.product_name or 'Device' }}
+                        <div style="font-size: 11px; color: var(--text-muted);"><code>{{ c.serial_number or 'N/A' }}</code></div>
+                    </td>
+                    <td>{{ c.fault_type }}</td>
+                    <td>
+                        {% if c.final_verdict == 'Likely Valid' or c.final_verdict == 'Approved' %}
+                            <span class="status-badge status-valid"><span class="status-dot"></span> {{ c.final_verdict }}</span>
+                        {% elif c.final_verdict == 'Likely Invalid' or c.final_verdict == 'Rejected' %}
+                            <span class="status-badge status-invalid"><span class="status-dot"></span> {{ c.final_verdict }}</span>
+                        {% else %}
+                            <span class="status-badge status-review"><span class="status-dot"></span> {{ c.final_verdict or 'Under Review' }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if c.claim_status in ['Submitted', 'Approved'] %}
+                            <span class="status-badge status-valid"><span class="status-dot"></span> {{ c.claim_status }}</span>
+                        {% elif c.claim_status in ['Rejected', 'Closed', 'Processing Failed'] %}
+                            <span class="status-badge status-invalid"><span class="status-dot"></span> {{ c.claim_status }}</span>
+                        {% else %}
+                            <span class="status-badge status-review"><span class="status-dot"></span> {{ c.claim_status }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ c.created_at }}</td>
+                    <td>
+                        <a href="{{ url_for('claim_detail', claim_id=c.claim_id) }}" class="btn btn-secondary btn-sm">View Details</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info" style="margin: 0;">
+        You have not submitted any claims yet. <a href="{{ url_for('customer_wizard') }}">Submit your first claim →</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

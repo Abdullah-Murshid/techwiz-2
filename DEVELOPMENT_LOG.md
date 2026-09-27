@@ -264,3 +264,44 @@
   - Ran `tests/test_non_functional_verification.py`: Verified < 5.0s processing latency requirement, model accuracy thresholds, and scalability architecture documentation.
 
 ---
+
+## Module 6: Package Management Migration & Presentation-Layer Rewrite
+- **Work Done**:
+  - **Package Management Migration**:
+    - Created PEP 621 compliant [`pyproject.toml`](file:///c:/Users/abdul/Desktop/assurex-claim-engine-main/pyproject.toml) listing all runtime dependencies with exact pinned versions matching the working `uv` environment.
+    - Added `[project.optional-dependencies]` `dev` section for test dependencies (`pytest`).
+    - Regenerated [`requirements.txt`](file:///c:/Users/abdul/Desktop/assurex-claim-engine-main/requirements.txt) in UTF-8 format from `pyproject.toml` for full backwards compatibility. `pyproject.toml` is now the single source of truth for dependencies.
+    - Updated [`README.md`](file:///c:/Users/abdul/Desktop/assurex-claim-engine-main/README.md) to showcase standard installation via `uv pip install -e .` / `pip install .` as primary method, with `requirements.txt` as fallback.
+  - **Presentation-Layer Rewrite**:
+    - Replaced legacy Streamlit interface with a production-grade Flask web application ([`app.py`](file:///c:/Users/abdul/Desktop/assurex-claim-engine-main/app.py) & [`src/app.py`](file:///c:/Users/abdul/Desktop/assurex-claim-engine-main/src/app.py)) serving Jinja2 HTML templates and Vanilla CSS/JS.
+    - Implemented a strict enterprise design system ([`static/css/style.css`](file:///c:/Users/abdul/Desktop/assurex-claim-engine-main/static/css/style.css)) following all design constraints:
+      - Neutral base palette (`#f8f9fa` canvas, `#ffffff` panels, `#0f172a` primary charcoal text, `#e2e8f0` borders).
+      - Zero saturated primary colors as UI chrome. Single slate-black accent color (`#1e293b`).
+      - Desaturated, muted claim status indicators only (Sage `#2e5b44` for valid/approved, Clay `#8c3a32` for invalid/rejected, Amber `#825e1d` for review/pending). All statuses feature a small colored dot + text label.
+      - Flat colors only — zero gradients anywhere in the application.
+      - Minimal 2-4px border radii, sharp-ish corners, zero bubbly/pill buttons, zero drop shadows or glow effects.
+      - System font stack (`Inter`/`-apple-system`), 8px base unit grid spacing, outlined SVG icons.
+    - Rebuilt all 7 application workflows calling exact pre-existing backend modules without touching backend logic:
+      1. Role-based login & registration (`/login`, `/register`).
+      2. Customer 4-step claim submission wizard with OCR verification & multi-AI verdict consensus (`/customer/submit-claim`).
+      3. Customer asset & warranty dashboard (`/customer/dashboard`).
+      4. Reviewer audit queue & decision override form (`/reviewer/queue`, `/reviewer/claim/<id>`).
+      5. Admin executive dashboard with KPIs, anomaly alerts, search & filtering, CSV/Excel exports, downloadable individual claim markdown reports, expiry threshold config, model retraining trigger, and audit trail logs (`/admin/dashboard`).
+      6. User notification tray (`/notifications`).
+      7. Standalone claim tracking detail view (`/claim/<id>`).
+    - Added automated web route test suite [`tests/test_flask_routes.py`](file:///c:/Users/abdul/Desktop/assurex-claim-engine-main/tests/test_flask_routes.py).
+- **Problems Hit**:
+  - Legacy `requirements.txt` was encoded in UTF-16 LE from Windows PowerShell; converted cleanly to standard UTF-8.
+- **Changes Made**:
+  - Created `pyproject.toml`
+  - Regenerated `requirements.txt`
+  - Created `app.py`
+  - Updated `src/app.py`
+  - Created `static/css/style.css`
+  - Created `static/js/main.js`
+  - Created `templates/base.html`, `templates/login.html`, `templates/customer/dashboard.html`, `templates/customer/wizard.html`, `templates/reviewer/queue.html`, `templates/reviewer/claim_detail.html`, `templates/admin/dashboard.html`, `templates/notifications.html`, `templates/claim_detail.html`
+  - Created `tests/test_flask_routes.py`
+  - Updated `README.md` and `DEVELOPMENT_LOG.md`
+- **Tests Run**:
+  - Executed `uv run pytest`: All 20 tests (15 core backend tests + 5 Flask web route tests) passed cleanly (100% pass rate).
+

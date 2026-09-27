@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block page_title %}Claims Manual Review & Audit Queue{% endblock %}
+
+{% block content %}
+<div class="panel">
+    <div class="panel-header">
+        <div>
+            <h2 class="panel-title">👥 Claims Awaiting Auditor Review</h2>
+            <p style="font-size: 12px; color: var(--text-muted); margin: 0;">Claims flagged for manual inspection, model disagreement, or rule flags.</p>
+        </div>
+        <input type="text" class="form-input" placeholder="Search by claim ID, customer, product..." style="max-width: 260px;" data-table-search="queue-table">
+    </div>
+
+    {% if queue_claims %}
+    <div class="alert alert-info">
+        There are <strong>{{ queue_claims | length }}</strong> claims requiring reviewer evaluation.
+    </div>
+
+    <div class="table-container">
+        <table class="table" id="queue-table">
+            <thead>
+                <tr>
+                    <th>Claim ID</th>
+                    <th>Customer Name</th>
+                    <th>Product / Serial</th>
+                    <th>Reported Fault</th>
+                    <th>Python ML</th>
+                    <th>Teachable Machine</th>
+                    <th>Original AI Verdict</th>
+                    <th>Submission Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in queue_claims %}
+                <tr>
+                    <td><code>{{ c.claim_id }}</code></td>
+                    <td style="font-weight: 500; color: var(--text-primary);">{{ c.customer_name }}</td>
+                    <td>
+                        {{ c.product_name }}
+                        <div style="font-size: 11px; color: var(--text-muted);"><code>{{ c.serial_number }}</code></div>
+                    </td>
+                    <td>{{ c.fault_type }}</td>
+                    <td>
+                        {% if c.ml_prediction %}
+                        <div>{{ c.ml_prediction }}</div>
+                        <div style="font-size: 11px; color: var(--text-muted);">{{ "%.1f"|format((c.ml_confidence or 0.0) * 100) }}%</div>
+                        {% else %}N/A{% endif %}
+                    </td>
+                    <td>
+                        {% if c.teachable_prediction %}
+                        <div>{{ c.teachable_prediction }}</div>
+                        <div style="font-size: 11px; color: var(--text-muted);">{{ "%.1f"|format((c.teachable_confidence or 0.0) * 100) }}%</div>
+                        {% else %}N/A{% endif %}
+                    </td>
+                    <td>
+                        <span class="status-badge status-review"><span class="status-dot"></span> {{ c.original_ai_verdict or c.final_verdict }}</span>
+                    </td>
+                    <td>{{ c.created_at }}</td>
+                    <td>
+                        <a href="{{ url_for('reviewer_claim_detail', claim_id=c.claim_id) }}" class="btn btn-primary btn-sm">Review & Audit</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-success" style="margin: 0;">
+        🎉 No claims currently awaiting manual review!
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

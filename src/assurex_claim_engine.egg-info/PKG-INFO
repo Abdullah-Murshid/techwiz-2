@@ -1,0 +1,178 @@
+Metadata-Version: 2.4
+Name: assurex-claim-engine
+Version: 1.0.0
+Summary: AssureX Automated Claim Verification Engine
+License: MIT
+Requires-Python: >=3.12
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: attrs==26.1.0
+Requires-Dist: certifi==2026.7.22
+Requires-Dist: charset-normalizer==3.5.1
+Requires-Dist: click==8.5.0
+Requires-Dist: cloudpickle==3.1.2
+Requires-Dist: contourpy==1.4.0
+Requires-Dist: cycler==0.12.1
+Requires-Dist: easyocr==1.7.2
+Requires-Dist: faker==40.39.0
+Requires-Dist: filelock==4.0.3
+Requires-Dist: flask==3.1.3
+Requires-Dist: fonttools==4.66.0
+Requires-Dist: fsspec==2026.9.0
+Requires-Dist: idna==3.20
+Requires-Dist: imageio==2.37.4
+Requires-Dist: itsdangerous==2.2.0
+Requires-Dist: jinja2==3.1.6
+Requires-Dist: joblib==1.6.0
+Requires-Dist: jsonschema==4.26.0
+Requires-Dist: jsonschema-specifications==2025.9.1
+Requires-Dist: kiwisolver==1.5.1
+Requires-Dist: lazy-loader==0.6
+Requires-Dist: markupsafe==3.0.3
+Requires-Dist: matplotlib==3.11.2
+Requires-Dist: mpmath==1.3.0
+Requires-Dist: networkx==3.7
+Requires-Dist: ninja==1.13.2
+Requires-Dist: numpy==2.5.3
+Requires-Dist: opencv-python-headless==5.0.0.93
+Requires-Dist: packaging==26.3
+Requires-Dist: pandas==3.0.6
+Requires-Dist: pillow==12.3.0
+Requires-Dist: protobuf==7.36.2
+Requires-Dist: pyclipper==1.4.0
+Requires-Dist: pyparsing==3.3.3
+Requires-Dist: python-bidi==0.6.11
+Requires-Dist: python-dateutil==2.9.0.post0
+Requires-Dist: pyyaml==6.0.3
+Requires-Dist: referencing==0.37.0
+Requires-Dist: requests==2.34.2
+Requires-Dist: rpds-py==2026.6.3
+Requires-Dist: scikit-image==0.26.0
+Requires-Dist: scikit-learn==1.9.1
+Requires-Dist: scipy==1.18.1
+Requires-Dist: setuptools==84.0.0
+Requires-Dist: shapely==2.1.2
+Requires-Dist: six==1.17.0
+Requires-Dist: sympy==1.14.0
+Requires-Dist: tabulate==0.10.0
+Requires-Dist: threadpoolctl==3.7.0
+Requires-Dist: tifffile==2026.9.20
+Requires-Dist: torch==2.14.0
+Requires-Dist: torchvision==0.29.0
+Requires-Dist: typing-extensions==4.16.0
+Requires-Dist: tzdata==2026.4
+Requires-Dist: urllib3==2.8.0
+Requires-Dist: werkzeug==3.1.8
+Provides-Extra: dev
+Requires-Dist: pytest==9.1.1; extra == "dev"
+Dynamic: license-file
+
+# AssureX Claim Verification Engine 🚀
+
+An end-to-end, AI-powered claim verification engine designed to automate electronic claim processing. The system combines **EasyOCR** for document extraction, an **XGBoost machine learning model** for pattern classification, and a deterministic **Rule Engine** for policy compliance enforcement.
+
+---
+
+## 🛠 System Architecture & Data Flow
+
+```
++-------------------+      +-----------------------+
+|  Input Claim Data | ---> |  OCR Processing Module |
+|  (JSON / Images)  |      | (Extract Text/Serial)  |
++-------------------+      +-----------------------+
+                                       |
+                                       v
+                            +-----------------------+
+                            |   XGBoost ML Model    |
+                            |  (Predicts Validity)  |
+                            +-----------------------+
+                                       |
+                                       v
+                            +-----------------------+
+                            |  Policy Rule Engine   |
+                            | (Hard Rejections /    |
+                            |   Manual Reviews)     |
+                            +-----------------------+
+                                       |
+                                       v
+                            +-----------------------+
+                            |     Final Verdict     |
+                            | (Valid/Invalid/Review)|
+                            +-----------------------+
+```
+
+---
+
+## 📋 Prerequisites & Requirements
+
+- **Python:** 3.10 or higher
+- **Package Manager:** [`uv`](https://github.com/astral-sh/uv) (recommended) or standard `pip`
+
+---
+
+## ⚙️ Project Setup
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/Abdullah-Murshid/assurex-claim-engine.git
+cd assurex-claim-engine
+```
+
+### 2. Create and Activate a Virtual Environment
+
+```bash
+# Create a virtual environment
+uv venv
+
+# Activate environment (Windows)
+.venv\Scripts\activate
+
+# Activate environment (macOS/Linux)
+source .venv/bin/activate
+```
+
+### 3. Install Dependencies
+
+Primary method (PEP 621 `pyproject.toml`):
+
+```bash
+uv pip install -e .
+# or standard pip:
+pip install .
+```
+
+Fallback method (`requirements.txt`):
+
+```bash
+uv pip install -r requirements.txt
+```
+
+---
+
+## 🚀 Running the Web Application
+
+To launch the Flask web application with the new enterprise presentation layer:
+
+```bash
+uv run python app.py
+# or
+python app.py
+```
+
+Open your browser to `http://127.0.0.1:5000`.
+
+### 🔑 Authentication Credentials
+- **Admin**: `admin` / `admin123`
+- **Reviewer**: `reviewer` / `reviewer123`
+- **Customer**: Register any user or login with `testcust` / `pass123`
+
+---
+
+## 🧪 Automated Testing
+
+To run the complete test suite (15 backend tests + 5 Flask route tests):
+
+```bash
+uv run pytest
+```

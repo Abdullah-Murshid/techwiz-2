@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block page_title %}Customer Portal Overview{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div>
+        <h1 style="font-size: 18px;">Welcome back, {{ session.user.full_name }}</h1>
+        <p style="font-size: 13px; color: var(--text-muted); margin: 0;">Overview of your registered assets, warranties, and claim requests.</p>
+    </div>
+    <a href="{{ url_for('customer_wizard') }}" class="btn btn-primary">
+        <svg class="nav-icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Submit New Claim
+    </a>
+</div>
+
+<!-- Condensed Stat Cards KPI Bar -->
+<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px;">
+    <div class="kpi-card kpi-neutral">
+        <div class="kpi-label">Registered Products</div>
+        <div class="kpi-value">{{ products_count }}</div>
+        <div class="kpi-sub">Total assets in system</div>
+    </div>
+    <div class="kpi-card kpi-valid">
+        <div class="kpi-label">Active Warranties</div>
+        <div class="kpi-value">{{ active_warranties_count }}</div>
+        <div class="kpi-sub">Coverage active</div>
+    </div>
+    <div class="kpi-card kpi-review">
+        <div class="kpi-label">Total Claims</div>
+        <div class="kpi-value">{{ claims_count }}</div>
+        <div class="kpi-sub">Submissions on record</div>
+    </div>
+</div>
+
+<!-- Quick Link Action Cards -->
+<div class="grid-3" style="margin-bottom: 24px;">
+    <div class="panel" style="margin-bottom: 0; padding: 20px; display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+            <h3 style="font-size: 15px; margin-bottom: 6px;">📦 My Registered Products</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">View warranty periods, expiration dates, and registered serial numbers.</p>
+        </div>
+        <div>
+            <a href="{{ url_for('customer_products') }}" class="btn btn-secondary btn-sm" style="width: 100%;">Manage Products →</a>
+        </div>
+    </div>
+    <div class="panel" style="margin-bottom: 0; padding: 20px; display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+            <h3 style="font-size: 15px; margin-bottom: 6px;">📜 My Claims History</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">Track claim lifecycle status, AI verdicts, and reviewer updates.</p>
+        </div>
+        <div>
+            <a href="{{ url_for('customer_claims') }}" class="btn btn-secondary btn-sm" style="width: 100%;">View Claims →</a>
+        </div>
+    </div>
+    <div class="panel" style="margin-bottom: 0; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; border-left: 3px solid var(--accent);">
+        <div>
+            <h3 style="font-size: 15px; margin-bottom: 6px;">⚡ Submit New Claim</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">Fast AI-assisted intake for damaged or malfunctioning devices.</p>
+        </div>
+        <div>
+            <a href="{{ url_for('customer_wizard') }}" class="btn btn-primary btn-sm" style="width: 100%;">Start Claim Wizard →</a>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Claims Preview Panel -->
+<div class="panel">
+    <div class="panel-header">
+        <div>
+            <h2 class="panel-title">📜 Recent Claim Submissions</h2>
+            <p style="font-size: 12px; color: var(--text-muted); margin: 0;">Showing recent activity across your account.</p>
+        </div>
+        <a href="{{ url_for('customer_claims') }}" class="btn btn-secondary btn-sm">View All Claims →</a>
+    </div>
+
+    {% if claims %}
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Claim ID</th>
+                    <th>Device / Serial</th>
+                    <th>Reported Fault</th>
+                    <th>AI Verdict</th>
+                    <th>Lifecycle Status</th>
+                    <th>Submitted At</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in claims %}
+                <tr>
+                    <td><code>{{ c.claim_id }}</code></td>
+                    <td>
+                        {{ c.product_name or 'Device' }}
+                        <div style="font-size: 11px; color: var(--text-muted);"><code>{{ c.serial_number or 'N/A' }}</code></div>
+                    </td>
+                    <td>{{ c.fault_type }}</td>
+                    <td>
+                        {% if c.final_verdict == 'Likely Valid' or c.final_verdict == 'Approved' %}
+                            <span class="status-badge status-valid"><span class="status-dot"></span> {{ c.final_verdict }}</span>
+                        {% elif c.final_verdict == 'Likely Invalid' or c.final_verdict == 'Rejected' %}
+                            <span class="status-badge status-invalid"><span class="status-dot"></span> {{ c.final_verdict }}</span>
+                        {% else %}
+                            <span class="status-badge status-review"><span class="status-dot"></span> {{ c.final_verdict or 'Under Review' }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if c.claim_status in ['Submitted', 'Approved'] %}
+                            <span class="status-badge status-valid"><span class="status-dot"></span> {{ c.claim_status }}</span>
+                        {% elif c.claim_status in ['Rejected', 'Closed', 'Processing Failed'] %}
+                            <span class="status-badge status-invalid"><span class="status-dot"></span> {{ c.claim_status }}</span>
+                        {% else %}
+                            <span class="status-badge status-review"><span class="status-dot"></span> {{ c.claim_status }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ c.created_at }}</td>
+                    <td>
+                        <a href="{{ url_for('claim_detail', claim_id=c.claim_id) }}" class="btn btn-secondary btn-sm">View Details</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info" style="margin: 0;">
+        You have not submitted any claims yet.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

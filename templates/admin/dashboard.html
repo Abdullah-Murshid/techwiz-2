@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block page_title %}Admin Overview{% endblock %}
+
+{% block content %}
+<!-- KPI Summary Bar -->
+<div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 24px;">
+    <div class="kpi-card kpi-neutral">
+        <div class="kpi-label">Total Claims</div>
+        <div class="kpi-value">{{ kpis.total_claims }}</div>
+    </div>
+    <div class="kpi-card kpi-valid">
+        <div class="kpi-label">Valid / Approved</div>
+        <div class="kpi-value">{{ kpis.valid_claims }}</div>
+        <div class="kpi-sub">{{ "%.1f"|format(kpis.valid_pct) }}% of total</div>
+    </div>
+    <div class="kpi-card kpi-invalid">
+        <div class="kpi-label">Invalid / Rejected</div>
+        <div class="kpi-value">{{ kpis.invalid_claims }}</div>
+        <div class="kpi-sub">{{ "%.1f"|format(kpis.invalid_pct) }}% of total</div>
+    </div>
+    <div class="kpi-card kpi-review">
+        <div class="kpi-label">Manual Review</div>
+        <div class="kpi-value">{{ kpis.manual_reviews }}</div>
+    </div>
+    <div class="kpi-card kpi-neutral">
+        <div class="kpi-label">Avg ML Confidence</div>
+        <div class="kpi-value">{{ "%.1f"|format(kpis.avg_conf) }}%</div>
+    </div>
+</div>
+
+<!-- Condensed Alerts Preview -->
+<div class="panel" style="{% if anomaly_alerts %}border-left-color: var(--status-invalid-dot);{% endif %}">
+    <div class="panel-header">
+        <div>
+            <h2 class="panel-title">🚨 System Anomaly Alerts</h2>
+            <p style="font-size: 12px; color: var(--text-muted); margin: 0;">
+                {% if anomaly_alerts %}
+                    {{ anomaly_alerts | length }} active — showing top 3 highest severity.
+                {% else %}
+                    No active anomaly alerts detected.
+                {% endif %}
+            </p>
+        </div>
+        <a href="{{ url_for('admin_alerts') }}" class="btn btn-secondary btn-sm">View all alerts →</a>
+    </div>
+
+    {% if anomaly_alerts %}
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Alert Type</th>
+                    <th>Severity</th>
+                    <th>Details</th>
+                    <th>Detected At</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in anomaly_alerts[:3] %}
+                <tr class="row-severity-{{ a.severity | lower }}">
+                    <td><code>{{ a.alert_type }}</code></td>
+                    <td>
+                        <span class="severity-badge severity-{{ a.severity | lower }}">
+                            <span class="status-dot"></span> {{ a.severity }}
+                        </span>
+                    </td>
+                    <td style="font-size: 12px;">{{ a.details[:80] }}{% if a.details|length > 80 %}…{% endif %}</td>
+                    <td>{{ a.created_at }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if anomaly_alerts | length > 3 %}
+    <div style="padding: 10px 16px; font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border-color);">
+        + {{ (anomaly_alerts | length) - 3 }} more alerts — <a href="{{ url_for('admin_alerts') }}">view all on Alerts page</a>
+    </div>
+    {% endif %}
+    {% else %}
+    <div style="padding: 16px; font-size: 13px; color: var(--text-muted);">
+        <span class="status-badge status-valid"><span class="status-dot"></span> All systems nominal</span>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Quick Links -->
+<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
+    <a href="{{ url_for('admin_claims') }}" class="kpi-card kpi-neutral" style="text-decoration: none; cursor: pointer; transition: box-shadow 0.15s ease;" onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)'" onmouseout="this.style.boxShadow='none'">
+        <div class="kpi-label">Claims & Export</div>
+        <div class="kpi-value" style="font-size: 18px;">{{ kpis.total_claims }}</div>
+        <div class="kpi-sub">Browse records →</div>
+    </a>
+    <a href="{{ url_for('admin_alerts') }}" class="kpi-card kpi-invalid" style="text-decoration: none; cursor: pointer; transition: box-shadow 0.15s ease;" onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)'" onmouseout="this.style.boxShadow='none'">
+        <div class="kpi-label">Anomaly Alerts</div>
+        <div class="kpi-value" style="font-size: 18px;">{{ anomaly_alerts | length }}</div>
+        <div class="kpi-sub">View all alerts →</div>
+    </a>
+    <a href="{{ url_for('admin_controls') }}" class="kpi-card kpi-neutral" style="text-decoration: none; cursor: pointer; transition: box-shadow 0.15s ease;" onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)'" onmouseout="this.style.boxShadow='none'">
+        <div class="kpi-label">System Controls</div>
+        <div class="kpi-value" style="font-size: 18px;">⚙️</div>
+        <div class="kpi-sub">Retrain & thresholds →</div>
+    </a>
+    <a href="{{ url_for('admin_audit_log') }}" class="kpi-card kpi-neutral" style="text-decoration: none; cursor: pointer; transition: box-shadow 0.15s ease;" onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)'" onmouseout="this.style.boxShadow='none'">
+        <div class="kpi-label">Audit Log</div>
+        <div class="kpi-value" style="font-size: 18px;">📜</div>
+        <div class="kpi-sub">View system log →</div>
+    </a>
+</div>
+{% endblock %}

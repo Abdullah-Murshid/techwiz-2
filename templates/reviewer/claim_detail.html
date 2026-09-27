@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block page_title %}Claim Audit & Reviewer Decision: {{ claim.claim_id }}{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 16px;">
+    <a href="{{ url_for('reviewer_queue') }}" class="btn btn-secondary btn-sm">← Back to Reviewer Queue</a>
+</div>
+
+<div class="panel">
+    <div class="panel-header">
+        <h2 class="panel-title">📄 Claim Details & Identification</h2>
+        <span class="status-badge status-review"><span class="status-dot"></span> {{ claim.claim_status }}</span>
+    </div>
+
+    <div class="grid-3">
+        <div>
+            <div class="kv-list">
+                <div class="kv-item"><span class="kv-key">Claim ID</span><span class="kv-val">{{ claim.claim_id }}</span></div>
+                <div class="kv-item"><span class="kv-key">Customer Name</span><span class="kv-val">{{ claim.customer_name or 'N/A' }}</span></div>
+                <div class="kv-item"><span class="kv-key">Customer Email</span><span class="kv-val">{{ claim.customer_email or 'N/A' }}</span></div>
+                <div class="kv-item"><span class="kv-key">Submission Date</span><span class="kv-val">{{ claim.created_at }}</span></div>
+            </div>
+        </div>
+
+        <div>
+            <div class="kv-list">
+                <div class="kv-item"><span class="kv-key">Product Name</span><span class="kv-val">{{ claim.product_name }}</span></div>
+                <div class="kv-item"><span class="kv-key">Category</span><span class="kv-val">{{ claim.category }}</span></div>
+                <div class="kv-item"><span class="kv-key">Brand / Model</span><span class="kv-val">{{ claim.brand }}</span></div>
+                <div class="kv-item"><span class="kv-key">Serial Number</span><span class="kv-val">{{ claim.serial_number }}</span></div>
+            </div>
+        </div>
+
+        <div>
+            <div class="kv-list">
+                <div class="kv-item"><span class="kv-key">Purchase Price</span><span class="kv-val">${{ claim.purchase_price }}</span></div>
+                <div class="kv-item"><span class="kv-key">Reported Fault</span><span class="kv-val">{{ claim.fault_type }}</span></div>
+                <div class="kv-item"><span class="kv-key">Original Verdict</span><span class="kv-val">{{ claim.original_ai_verdict or 'N/A' }}</span></div>
+                <div class="kv-item"><span class="kv-key">Current Verdict</span><span class="kv-val">{{ claim.final_verdict }}</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Multi-AI Intelligence Metrics -->
+<div class="panel">
+    <div class="panel-header">
+        <h2 class="panel-title">🤖 AI Predictions & Model Disagreement Analysis</h2>
+    </div>
+
+    <div class="grid-2">
+        <div class="kpi-card">
+            <div class="kpi-label">Python Tabular ML Classifier</div>
+            <div class="kpi-value" style="font-size: 18px;">{{ claim.ml_prediction or 'N/A' }}</div>
+            <div class="kpi-sub">Confidence Score: {{ "%.1f"|format((claim.ml_confidence or 0.0) * 100) }}%</div>
+        </div>
+
+        <div class="kpi-card">
+            <div class="kpi-label">Teachable Machine Visual Classifier</div>
+            <div class="kpi-value" style="font-size: 18px;">{{ claim.teachable_prediction or 'N/A' }}</div>
+            <div class="kpi-sub">Confidence Score: {{ "%.1f"|format((claim.teachable_confidence or 0.0) * 100) }}%</div>
+        </div>
+    </div>
+</div>
+
+<!-- Reviewer Verdict & Decision Submission Form -->
+<div class="panel" style="border: 1px solid var(--border-focus);">
+    <div class="panel-header">
+        <h2 class="panel-title">⚖️ Reviewer Verdict Decision & Audit Submission</h2>
+    </div>
+
+    <form action="{{ url_for('reviewer_claim_detail', claim_id=claim.claim_id) }}" method="POST">
+        <div class="grid-2">
+            <div class="form-group">
+                <label class="form-label" for="new_verdict">Reviewer Verdict Decision</label>
+                <select id="new_verdict" name="new_verdict" class="form-select" required>
+                    <option value="Approved">Approved</option>
+                    <option value="Rejected">Rejected</option>
+                    <option value="Override - Approved">Override - Approved</option>
+                    <option value="Override - Rejected">Override - Rejected</option>
+                    <option value="Additional Info Required">Additional Info Required</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="override_reason">Mandatory Reviewer Override Reason / Comments</label>
+                <textarea id="override_reason" name="override_reason" class="form-textarea" placeholder="Provide clear audit justification for this verdict decision..." required></textarea>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; margin-top: 16px; border-top: 1px solid var(--border-color); padding-top: 16px;">
+            <button type="submit" class="btn btn-primary">Submit Reviewer Decision & Log Audit Record</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
